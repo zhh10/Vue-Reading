@@ -168,3 +168,72 @@ function hasPermission(roles, route) {
 - asyncRoutes过滤的逻辑是看路由下是否包含 meta 和 meta.roles 属性，如果没有该属性，所以这是一个通用路由，不需要进行权限校验；如果包含 roles 属性则会判断用户的角色是否命中路由中的任意一个权限，如果命中，则将路由保存下来，如果未命中，则直接将该路由舍弃；
 - asyncRoutes 处理完毕后，会和 constantRoutes合并为一个新的路由对象，并保存到 vuex 的 permission/routes 中；
 - 用户登录系统后，侧边栏会从 vuex 中获取 state.permission.routes，根据该路由动态渲染用户菜单。
+
+--- 
+
+## 2. Token
+### Token是什么
+Token的本质是字符串，用于请求时附带在请求头中，检验请求是否合法及判断用户身份
+
+### Token与Session、Cookie的区别
+- Session保存在服务端，用于客户端与服务端连接时，临时保存用户信息，当用户释放连接后，Session将被释放。
+- Cookie保存在客户端，当客户端发起请求时，Cookie会附带在http header中，提供给服务端辨识用户身份
+- Token请求时提供，用户检验用户是否具备访问接口的权限。
+
+Token的用途主要有三点：
+- 拦截无效请求，降低服务器处理压力
+- 实现第三方api授权，无需每次都输入用户密码鉴权
+- 身份检验，防止csrf攻击
+
+### 生成JWT Token 
+```
+const PRIVATE_KEY = 'China No_1'
+const JWT_EXPIRED = '60*60' // token失效时间
+const jwt = require('jsonwebtoken') 
+const token = jwt.sign({username}
+                ,PRIVATE_KEY
+                ,{expiresIn:JWT_EXPIRED})
+```
+
+### 可以将该token在`jwt.io`网站上进行验证
+
+### JWT认证
+```
+npm install express-jwt 
+```
+```
+const expressJwt = require('express-jwt')
+const PRIVATE_KEY = requre('../utils/constant')
+
+const jwtAuth = expressJwt({
+    secret:PRIVATE_KEY,
+    credentialsRequired:true // 设置为false九不进行检验了，游客也可以访问
+}).unless({
+    path:[
+        '/',
+        '/user/login'
+    ]   //  设置jwt白名单
+})
+
+module.exports = jwtAuth 
+```
+使用中间件
+```
+const jwtAuth = require('./jwt')
+const router = express.Router() 
+// 对所有路由进行jwt认证
+router.use(jwtAuth)
+```
+### 通过token获取用户信息
+```
+function decode(req){
+    const authorization = req.get('authorization')
+    let token = '' 
+    if(authorization.indexOf('Bearer') >= 0){
+        token = authorization.replace('Bearer ','')else{
+            token = authorization
+        }
+    }
+    return jwt.vertify(token,PRIVATE_KEY)
+}
+```
