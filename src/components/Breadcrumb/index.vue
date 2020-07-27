@@ -36,11 +36,13 @@ export default {
       let matched = this.$route.matched.filter(item => item.meta && item.meta.title)
       const first = matched[0]
 
+      // 如果第一个不是isDashboard 就加进去
       if (!this.isDashboard(first)) {
-        matched = [{ path: '/dashboard', meta: { title: 'Dashboard' }}].concat(matched)
+        matched = [{ path: '/dashboard', meta: { title: '首页' }}].concat(matched)
       }
-
+      // 过滤掉没有meta或没有meta.title或meta.breadcrumb为false的项
       this.levelList = matched.filter(item => item.meta && item.meta.title && item.meta.breadcrumb !== false)
+      console.log(this.levelList)
     },
     isDashboard(route) {
       const name = route && route.name

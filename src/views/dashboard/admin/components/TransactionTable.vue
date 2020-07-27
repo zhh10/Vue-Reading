@@ -42,7 +42,7 @@ export default {
     }
   },
   created() {
-    this.fetchData()
+    // this.fetchData() // 暂时ban掉这个请求
   },
   methods: {
     fetchData() {
